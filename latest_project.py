@@ -2,7 +2,7 @@
 import cv2
 import numpy as np
 import imutils
-cap = cv2.VideoCapture("../traffic_videos/NIGHT_TIME/vid1.avi")
+cap = cv2.VideoCapture("../../traffic_videos/NIGHT_TIME/vid1.avi")
 
 subtractor = cv2.createBackgroundSubtractorMOG2(history=30, varThreshold=28)
 i = 0
@@ -17,14 +17,15 @@ while True:
     # if(i==2048):
     #     cv2.imwrite("latest/clahe.jpg",out)
     # out = cv2.equalizeHist(out)
+    # applying b/g substraction
     mask = subtractor.apply(out)
     # if(i==2048):
     #     cv2.imwrite("latest/after_subtraction.jpg",mask)
-    mask = cv2.GaussianBlur(mask, (5, 5), 0)
-    kernel2 = np.ones((3, 3), np.uint8)
-    dilation = cv2.dilate(mask, kernel2, iterations=1)
+    mask = cv2.GaussianBlur(mask, (7, 7), 0)
+    # kernel2 = np.ones((3, 3), np.uint8)
+    # dilation = cv2.dilate(mask, kernel2, iterations=1)
     # mask = cv2.medianBlur(mask, 7)
-    mask = cv2.medianBlur(mask, 13)
+    mask = cv2.medianBlur(mask, 11)
     # kernel = np.ones((5, 5), np.uint8)
     # mask = cv2.erode(mask, kernel2, iterations=1)
     # mask = cv2.GaussianBlur(mask, (5, 5), 0)
@@ -56,21 +57,26 @@ while True:
     # cnts = cnts[0]
     # cnt = cnts[4]
     # print(cnts)
-    if l == 2:
-        break
     # try:
     #     # cv2.drawContours(frame, [cnts], 0, (0,255,0), 3)
     # except:
     #     pass
+
+    # contour part block with preset threshold
     for i in range(len(cnts)):
         c = cnts[i]
-        print(c)
+        # print(c)
         # print(cv2.contourArea(c))
         ar = cv2.contourArea(c)
-        if(ar < 1450 and ar > 1000):
-            # print(cv2.contourArea(c))
-            x, y, w, h = cv2.boundingRect(c)
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+        x, y, w, h = cv2.boundingRect(c)
+        if(ar > 650):
+            if(w > h and (w/h < 4)) or (h/w < 4):
+                # print("w/h is : ", w/h)
+                # print("x is : {}, y is : {}, w is : {}, h is : {}".format(x, y, w, h))
+                # cv2.circle(frame, (x, y), 20, 2)
+                # print("h/w is : ", h/w)
+                # print(cv2.contourArea(c))
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
     #     # try:
     #     # cv2.drawContours(frame, [c], -1, (0, 255, 0), 2)
     #     # except:
@@ -83,7 +89,7 @@ while True:
         # print("here : ",c)
         # print("next")
         # pass
-    print("frame")
+    # print("frame")
     # show the output image
     try:
         cv2.imshow("Frame", frame)
