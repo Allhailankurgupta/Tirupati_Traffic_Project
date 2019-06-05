@@ -1,3 +1,4 @@
+# taken from background test 2
 import cv2
 import numpy as np
 import imutils
@@ -12,20 +13,29 @@ while True:
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     out = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     out = clahe.apply(out)
-    cv2.imshow("out", out)
+    # cv2.imshow("out", out)
     # if(i==2048):
     #     cv2.imwrite("latest/clahe.jpg",out)
-    # out = cv2.equalizeHist(frame_2)
+    # out = cv2.equalizeHist(out)
     mask = subtractor.apply(out)
     # if(i==2048):
     #     cv2.imwrite("latest/after_subtraction.jpg",mask)
-    mask = cv2.GaussianBlur(mask, (3, 3), 0)
-    # mask = cv2.medianBlur(mask,5)
+    mask = cv2.GaussianBlur(mask, (5, 5), 0)
+    kernel2 = np.ones((3, 3), np.uint8)
+    dilation = cv2.dilate(mask, kernel2, iterations=1)
+    # mask = cv2.medianBlur(mask, 7)
+    mask = cv2.medianBlur(mask, 13)
+    # kernel = np.ones((5, 5), np.uint8)
+    # mask = cv2.erode(mask, kernel2, iterations=1)
+    # mask = cv2.GaussianBlur(mask, (5, 5), 0)
+
+    # mask = cv2.medianBlur(mask, 5)
+    # mask = cv2.medianBlur(mask, 5)
     # if(i==2048):
     #     cv2.imwrite("latest/Blurred.jpg",mask)
 
-    # _,mask = cv2.threshold(mask,10,255,cv2.THRESH_BINARY)
     _, mask = cv2.threshold(mask, 15, 255, cv2.THRESH_BINARY)
+    # _, mask = cv2.threshold(mask, 15, 255, cv2.THRESH_BINARY)
     # mask = cv2.GaussianBlur(mask,(17,17),0)
     # mask = cv2.medianBlur(mask,5)
     # _,mask = cv2.threshold(mask,45,255,cv2.THRESH_BINARY)
@@ -36,11 +46,14 @@ while True:
     #     cv2.imwrite("latest/After_thresholding.jpg",mask)
     # except:
     # pass
-    # im2, contours, hierarchy = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    im2, contours, hierarchy = cv2.findContours(
+        mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-    cnts = cv2.findContours(
-        mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    cnts = cnts[0]
+    # cnts = cv2.findContours(
+    #     mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cnts = contours
+    print(cnts.__len__())
+    # cnts = cnts[0]
     # cnt = cnts[4]
     # print(cnts)
     if l == 2:
@@ -51,22 +64,19 @@ while True:
     #     pass
     for i in range(len(cnts)):
         c = cnts[i]
-        if(cv2.contourArea(c) < 1450):
-            if(cv2.contourArea(c) > 1000):
-                print(cv2.contourArea(c))
-            continue
-        # M = cv2.moments(c)
-        # c = c.astype("float")
-
-        # c = c.astype("int")
-        x, y, w, h = cv2.boundingRect(c)
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-        # try:
-        # cv2.drawContours(frame, [c], -1, (0, 255, 0), 2)
-        # except:
-        # print("here : ",c)
-        # print("next")
-        # pass
+        print(c)
+        # print(cv2.contourArea(c))
+        ar = cv2.contourArea(c)
+        if(ar < 1450 and ar > 1000):
+            # print(cv2.contourArea(c))
+            x, y, w, h = cv2.boundingRect(c)
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+    #     # try:
+    #     # cv2.drawContours(frame, [c], -1, (0, 255, 0), 2)
+    #     # except:
+    #     # print("here : ",c)
+    #     # print("next")
+    #     # pass
     # try:
     #     cv2.drawContours(frame, cnts, -1, (0, 255, 0), 2)
     # except:
@@ -81,7 +91,7 @@ while True:
     except:
         pass
 
-    key = cv2.waitKey(3000)
+    key = cv2.waitKey(3)
     if key == 27:
         break
     # if(i==2048):
