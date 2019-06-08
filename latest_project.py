@@ -12,14 +12,38 @@ while True:
     # Reading one frame
     _, frame = cap.read()
 
+
+
+
+    
+    lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+
+    lab_planes = cv2.split(lab)
+
+    clahe = cv2.createCLAHE(clipLimit=2.0,tileGridSize=(4,4))
+
+    lab_planes[0] = clahe.apply(lab_planes[0])
+    # lab_planes[1] = clahe.apply(lab_planes[1])
+    lab_planes[2] = clahe.apply(lab_planes[2])
+    # print(type(lab_planes[0]))
+    # print(lab_planes.__len__())
+
+    # _, lab_planes[0] = cv2.threshold(lab_planes[0], 15, 255, cv2.THRESH_BINARY)
+    # _, lab_planes[1] = cv2.threshold(lab_planes[1], 15, 255, cv2.THRESH_BINARY)
+    # _, lab_planes[2] = cv2.threshold(lab_planes[2], 15, 255, cv2.THRESH_BINARY)
+
+    lab = cv2.merge(lab_planes)
+
+    out = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+
     # Initializing CLAHE
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
     # Converting colourspace
-    out = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    # out = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # Applying CLAHE
-    out = clahe.apply(out)
+    # out = clahe.apply(out)
     # cv2.imshow("out", out)
     # if(i==2048):
     #     cv2.imwrite("latest/clahe.jpg",out)
@@ -28,17 +52,21 @@ while True:
 
     # Applying Background Subtraction
     mask = subtractor.apply(out)
+    print('second type',type(mask))
     # if(i==2048):
     #     cv2.imwrite("latest/after_subtraction.jpg",mask)
 
     # Applying Gaussian Blur
-    mask = cv2.GaussianBlur(mask, (7, 7), 0)
+    mask = cv2.GaussianBlur(mask, (13, 9), cv2.BORDER_DEFAULT)
+    cv2.imshow('Gauss Mask',mask)
     # kernel2 = np.ones((3, 3), np.uint8)
     # dilation = cv2.dilate(mask, kernel2, iterations=1)
     # mask = cv2.medianBlur(mask, 7)
 
+    _, mask = cv2.threshold(mask, 15, 255, cv2.THRESH_BINARY)
     # Applying Median Blur
     mask = cv2.medianBlur(mask, 11)
+    cv2.imshow('Median mask',mask)
     # kernel = np.ones((5, 5), np.uint8)
     # mask = cv2.erode(mask, kernel2, iterations=1)
     # mask = cv2.GaussianBlur(mask, (5, 5), 0)
@@ -93,7 +121,7 @@ while True:
 
         # checking if the area is greater than some threshold
         if(ar > 650):
-            if(w > h and (w/h < 4)) or (h/w < 4):
+            if(w > h and (w/h < 3.5)) or (h/w < 3.5):
                 # print("w/h is : ", w/h)
                 # print("x is : {}, y is : {}, w is : {}, h is : {}".format(x, y, w, h))
                 # cv2.circle(frame, (x, y), 20, 2)
