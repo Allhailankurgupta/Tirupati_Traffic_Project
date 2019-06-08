@@ -6,17 +6,29 @@ import imutils
 cap = cv2.VideoCapture("../../traffic_videos/NIGHT_TIME/vid1.avi")
 
 # Initializing The subtractor
-subtractor = cv2.createBackgroundSubtractorMOG2(history=30, varThreshold=28)
+subtractor = cv2.createBackgroundSubtractorMOG2(history=30, varThreshold=28,detectShadows=1)
 
 while True:
     # Reading one frame
     _, frame = cap.read()
 
+    hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
 
+    components = cv2.split(hsv)
+    # print('length is ',components.__len__())
+    # cv2.imshow("H component",components[0])
+    # cv2.imshow("S component",components[1])
 
-
+    _, components[2] = cv2.threshold(components[2], 140, 255, cv2.THRESH_TRUNC)
+    # components[2] = components[2] - new_V
+    # cv2.imshow("V component",components[2])
+    hsv = cv2.merge(components)
+    new_frame = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+    # Initializing CLAHE
+    # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    # out = new_frame
     
-    lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+    lab = cv2.cvtColor(new_frame, cv2.COLOR_BGR2LAB)
 
     lab_planes = cv2.split(lab)
 
@@ -63,12 +75,13 @@ while True:
     # dilation = cv2.dilate(mask, kernel2, iterations=1)
     # mask = cv2.medianBlur(mask, 7)
 
-    _, mask = cv2.threshold(mask, 15, 255, cv2.THRESH_BINARY)
+    # _, mask = cv2.threshold(mask, 15, 255, cv2.THRESH_BINARY)
     # Applying Median Blur
     mask = cv2.medianBlur(mask, 11)
     cv2.imshow('Median mask',mask)
-    # kernel = np.ones((5, 5), np.uint8)
-    # mask = cv2.erode(mask, kernel2, iterations=1)
+    kernel = np.ones((5, 5), np.uint8)
+    mask = cv2.erode(mask, kernel, iterations=1)
+    mask = cv2.dilate(mask, kernel, iterations=2)
     # mask = cv2.GaussianBlur(mask, (5, 5), 0)
 
     # mask = cv2.medianBlur(mask, 5)
@@ -79,9 +92,11 @@ while True:
     # binarization of the frame
     _, mask = cv2.threshold(mask, 15, 255, cv2.THRESH_BINARY)
     # _, mask = cv2.threshold(mask, 15, 255, cv2.THRESH_BINARY)
-    # mask = cv2.GaussianBlur(mask,(17,17),0)
-    # mask = cv2.medianBlur(mask,5)
-    # _,mask = cv2.threshold(mask,45,255,cv2.THRESH_BINARY)
+    mask = cv2.GaussianBlur(mask,(17,17),0)
+    mask = cv2.medianBlur(mask,9)
+    mask = cv2.erode(mask, kernel, iterations=1)
+    mask = cv2.dilate(mask, kernel, iterations=2)
+    _,mask = cv2.threshold(mask,85,255,cv2.THRESH_BINARY)
     # mask = cv2.GaussianBlur(mask,(9,9),0)
     # mask = cv2.medianBlur(mask,5)
     # _,mask = cv2.threshold(mask,45,255,cv2.THRESH_BINARY)
