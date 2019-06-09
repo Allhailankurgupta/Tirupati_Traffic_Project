@@ -6,7 +6,7 @@ import imutils
 cap = cv2.VideoCapture("../../traffic_videos/NIGHT_TIME/vid1.avi")
 
 # Initializing The subtractor
-subtractor = cv2.createBackgroundSubtractorMOG2(history=30, varThreshold=28,detectShadows=1)
+subtractor = cv2.createBackgroundSubtractorMOG2(history=30, varThreshold=28,detectShadows = True)
 
 while True:
     # Reading one frame
@@ -64,7 +64,11 @@ while True:
 
     # Applying Background Subtraction
     mask = subtractor.apply(out)
+    cv2.imshow('subtracted',mask)
     print('second type',type(mask))
+    _, mask = cv2.threshold(mask, 130, 255, cv2.THRESH_TOZERO)
+    cv2.imshow('thresholded',mask)
+    
     # if(i==2048):
     #     cv2.imwrite("latest/after_subtraction.jpg",mask)
 
@@ -77,11 +81,11 @@ while True:
 
     # _, mask = cv2.threshold(mask, 15, 255, cv2.THRESH_BINARY)
     # Applying Median Blur
-    mask = cv2.medianBlur(mask, 11)
-    cv2.imshow('Median mask',mask)
+    # mask = cv2.medianBlur(mask, 11)
+    # cv2.imshow('Median mask',mask)
     kernel = np.ones((5, 5), np.uint8)
-    mask = cv2.erode(mask, kernel, iterations=1)
-    mask = cv2.dilate(mask, kernel, iterations=2)
+    # mask = cv2.erode(mask, kernel, iterations=1)
+    # mask = cv2.dilate(mask, kernel, iterations=2)
     # mask = cv2.GaussianBlur(mask, (5, 5), 0)
 
     # mask = cv2.medianBlur(mask, 5)
@@ -96,7 +100,7 @@ while True:
     mask = cv2.medianBlur(mask,9)
     mask = cv2.erode(mask, kernel, iterations=1)
     mask = cv2.dilate(mask, kernel, iterations=2)
-    _,mask = cv2.threshold(mask,85,255,cv2.THRESH_BINARY)
+    _,mask = cv2.threshold(mask,45,255,cv2.THRESH_BINARY)
     # mask = cv2.GaussianBlur(mask,(9,9),0)
     # mask = cv2.medianBlur(mask,5)
     # _,mask = cv2.threshold(mask,45,255,cv2.THRESH_BINARY)
