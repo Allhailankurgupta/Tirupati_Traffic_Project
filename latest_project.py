@@ -49,30 +49,30 @@ while True:
     _, frame = cap.read()
 
 
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 4))
 
 
     
-    lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+    # lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
 
-    lab_planes = cv2.split(lab)
+    # lab_planes = cv2.split(lab)
 
-    clahe = cv2.createCLAHE(clipLimit=2.0,tileGridSize=(4,4))
+    # clahe = cv2.createCLAHE(clipLimit=2.0,tileGridSize=(4,4))
 
-    lab_planes[0] = clahe.apply(lab_planes[0])
-    # lab_planes[1] = clahe.apply(lab_planes[1])
-    lab_planes[2] = clahe.apply(lab_planes[2])
-    # print(type(lab_planes[0]))
-    # print(lab_planes.__len__())
+    # lab_planes[0] = clahe.apply(lab_planes[0])
+    # # lab_planes[1] = clahe.apply(lab_planes[1])
+    # lab_planes[2] = clahe.apply(lab_planes[2])
+    # # print(type(lab_planes[0]))
+    # # print(lab_planes.__len__())
 
-    # _, lab_planes[0] = cv2.threshold(lab_planes[0], 15, 255, cv2.THRESH_BINARY)
-    # _, lab_planes[1] = cv2.threshold(lab_planes[1], 15, 255, cv2.THRESH_BINARY)
-    # _, lab_planes[2] = cv2.threshold(lab_planes[2], 15, 255, cv2.THRESH_BINARY)
+    # # _, lab_planes[0] = cv2.threshold(lab_planes[0], 15, 255, cv2.THRESH_BINARY)
+    # # _, lab_planes[1] = cv2.threshold(lab_planes[1], 15, 255, cv2.THRESH_BINARY)
+    # # _, lab_planes[2] = cv2.threshold(lab_planes[2], 15, 255, cv2.THRESH_BINARY)
 
-    lab = cv2.merge(lab_planes)
+    # lab = cv2.merge(lab_planes)
 
-    out = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
-
+    # out = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+    out = frame
     # Initializing CLAHE
     # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
@@ -87,54 +87,56 @@ while True:
     # out = cv2.equalizeHist(out)
     # applying b/g substraction
 
-    hsv = cv2.cvtColor(out,cv2.COLOR_BGR2HSV)
+    # hsv = cv2.cvtColor(out,cv2.COLOR_BGR2HSV)
 
-    components = cv2.split(hsv)
-    # print('length is ',components.__len__())
-    # cv2.imshow("H component",components[0])
-    # cv2.imshow("S component",components[1])
+    # components = cv2.split(hsv)
+    # # print('length is ',components.__len__())
+    # # cv2.imshow("H component",components[0])
+    # # cv2.imshow("S component",components[1])
 
 
-    cv2.imshow("v channel",components[2])
-    components[2] = cv2.medianBlur(components[2],7)
+    # cv2.imshow("v channel",components[2])
+    # # components[2] = cv2.medianBlur(components[2],7)
 
-    cv2.imshow("gaussian v channel",components[2])
+    # # cv2.imshow("gaussian v channel",components[2])
 
-    _, components[2] = cv2.threshold(components[2], 60, 255, cv2.THRESH_TOZERO_INV)
-    cv2.imshow("threshold v channel",components[2])
-    components[2] = cv2.dilate(components[2], kernel, iterations=2)
+    # _, components[2] = cv2.threshold(components[2], 160, 255, cv2.THRESH_TOZERO_INV)
+    # cv2.imshow("threshold v channel",components[2])
+    # # components[2] = cv2.dilate(components[2], kernel, iterations=2)
 
-    # components[2] = components[2] - new_V
-    # cv2.imshow("V component",components[2])
-    hsv = cv2.merge(components)
-    out = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+    # # components[2] = components[2] - new_V
+    # # cv2.imshow("V component",components[2])
+    # hsv = cv2.merge(components)
+    # out = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
     # Applying Background Subtraction
     mask = subtractor.apply(out)
-    print('second type',type(mask))
+    # print('second type',type(mask))
     # if(i==2048):
     #     cv2.imwrite("latest/after_subtraction.jpg",mask)
 
+    cv2.imshow('after background subtraction',mask)
     # Fill any small holes
     closing = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    cv2.imshow('closing',closing)
     # Remove noise
     opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel)
-
+    cv2.imshow('Opening',opening)
     # Dilate to merge adjacent blobs
-    dilation = cv2.dilate(opening, kernel, iterations=2)
-    _, mask = cv2.threshold(dilation, 254, 255, cv2.THRESH_BINARY)
+    dilation = cv2.dilate(opening, kernel, iterations=9)
+    _, mask = cv2.threshold(dilation, 240, 255, cv2.THRESH_BINARY)
 
     cv2.imshow('nOT mINE',mask)
     # Applying Gaussian Blur
-    mask = cv2.GaussianBlur(mask, (13, 9), cv2.BORDER_DEFAULT)
+    mask = cv2.GaussianBlur(mask, (5, 5), cv2.BORDER_DEFAULT)
     cv2.imshow('Gauss Mask',mask)
     # kernel2 = np.ones((3, 3), np.uint8)
     # dilation = cv2.dilate(mask, kernel2, iterations=1)
     # mask = cv2.medianBlur(mask, 7)
 
-    _, mask = cv2.threshold(mask, 15, 255, cv2.THRESH_BINARY)
+    _, mask = cv2.threshold(mask, 35, 255, cv2.THRESH_BINARY)
     # Applying Median Blur
-    mask = cv2.medianBlur(mask, 11)
+    mask = cv2.medianBlur(mask, 5)
     cv2.imshow('Median mask',mask)
     # kernel = np.ones((5, 5), np.uint8)
     # mask = cv2.erode(mask, kernel2, iterations=1)
@@ -189,7 +191,7 @@ while True:
         x, y, w, h = cv2.boundingRect(c)
 
         # checking if the area is greater than some threshold
-        if(ar > 650):
+        if(ar > 450):
             if(w > h and (w/h < 3.5)) or (h/w < 3.5):
                 # print("w/h is : ", w/h)
                 # print("x is : {}, y is : {}, w is : {}, h is : {}".format(x, y, w, h))
