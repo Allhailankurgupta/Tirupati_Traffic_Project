@@ -3,14 +3,14 @@ import numpy as np
 # import imutils
 
 # Reading The video
-cap = cv2.VideoCapture("../../traffic_videos/NIGHT_TIME/vid1.avi")
+# cap = cv2.VideoCapture("../../traffic_videos/NIGHT_TIME/vid1.avi")
 
 # Initializing The subtractor
 # subtractor = cv2.createBackgroundSubtractorMOG2(history=30, varThreshold=28)
 # cv2.ocl.setUseOpenCL(False)
 
 subtractor = cv2.createBackgroundSubtractorMOG2(
-        history=500, detectShadows=True)
+        history=100, detectShadows=True)
 
 def train_bg_subtractor(inst, cap, num=500):
     '''
@@ -36,7 +36,7 @@ def train_bg_subtractor(inst, cap, num=500):
         out = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
         inst.apply(out, None, 0.001)
         i += 1
-train_bg_subtractor(subtractor, cap, num=500)
+# train_bg_subtractor(subtractor, cap, num=500)
 # cap = skvideo.io.vreader("../../traffic_videos/NIGHT_TIME/vid1.avi")
 cap = cv2.VideoCapture("../../traffic_videos/NIGHT_TIME/vid1.avi")
 
@@ -97,7 +97,8 @@ while True:
 
     # Dilate to merge adjacent blobs
     dilation = cv2.dilate(opening, kernel, iterations=2)
-    mask = dilation
+    _, mask = cv2.threshold(dilation, 245, 255, cv2.THRESH_BINARY)
+
     cv2.imshow('nOT mINE',mask)
     # Applying Gaussian Blur
     mask = cv2.GaussianBlur(mask, (13, 9), cv2.BORDER_DEFAULT)
