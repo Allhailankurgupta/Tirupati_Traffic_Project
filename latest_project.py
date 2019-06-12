@@ -12,6 +12,9 @@ import numpy as np
 subtractor = cv2.createBackgroundSubtractorMOG2(
         history=100, detectShadows=True)
 
+
+
+
 def train_bg_subtractor(inst, cap, num=500):
     '''
         BG substractor need process some amount of frames to start giving result
@@ -46,6 +49,7 @@ while True:
     _, frame = cap.read()
 
 
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2))
 
 
     
@@ -83,12 +87,33 @@ while True:
     # out = cv2.equalizeHist(out)
     # applying b/g substraction
 
+    hsv = cv2.cvtColor(out,cv2.COLOR_BGR2HSV)
+
+    components = cv2.split(hsv)
+    # print('length is ',components.__len__())
+    # cv2.imshow("H component",components[0])
+    # cv2.imshow("S component",components[1])
+
+
+    cv2.imshow("v channel",components[2])
+    components[2] = cv2.medianBlur(components[2],7)
+
+    cv2.imshow("gaussian v channel",components[2])
+
+    _, components[2] = cv2.threshold(components[2], 60, 255, cv2.THRESH_TOZERO_INV)
+    cv2.imshow("threshold v channel",components[2])
+    components[2] = cv2.dilate(components[2], kernel, iterations=2)
+
+    # components[2] = components[2] - new_V
+    # cv2.imshow("V component",components[2])
+    hsv = cv2.merge(components)
+    out = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+
     # Applying Background Subtraction
     mask = subtractor.apply(out)
     print('second type',type(mask))
     # if(i==2048):
     #     cv2.imwrite("latest/after_subtraction.jpg",mask)
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2))
 
     # Fill any small holes
     closing = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
@@ -97,7 +122,7 @@ while True:
 
     # Dilate to merge adjacent blobs
     dilation = cv2.dilate(opening, kernel, iterations=2)
-    _, mask = cv2.threshold(dilation, 245, 255, cv2.THRESH_BINARY)
+    _, mask = cv2.threshold(dilation, 254, 255, cv2.THRESH_BINARY)
 
     cv2.imshow('nOT mINE',mask)
     # Applying Gaussian Blur
