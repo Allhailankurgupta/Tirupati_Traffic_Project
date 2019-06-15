@@ -11,42 +11,29 @@ from Vehicle_counter import VehicleCounter
 # cv2.ocl.setUseOpenCL(False)
 random.seed(123)
 
-# ============================================================================
+# ============================================================================ #
+                                # Video Source
 IMAGE_DIR = "./out"
 VIDEO_SOURCE = "../../traffic_videos/NIGHT_TIME/vid1.avi"
 SHAPE = (720, 1280)  # HxW
-# ============================================================================
-
-
+# ========================================================================================================================================== #
+                                            # Getting Dimensions and other properties of frame
 cap = cv2.VideoCapture(VIDEO_SOURCE)
-while True:
-    ret, frame = cap.read()
-    if ret:
-        height = frame.shape[0]
-        length = frame.shape[1]
-        break
-    else:
-        print('no frame')
+frames_count, fps, width, height = cap.get(cv2.CAP_PROP_FRAME_COUNT), cap.get(cv2.CAP_PROP_FPS), cap.get(
+    cv2.CAP_PROP_FRAME_WIDTH), cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+length = int(width)
+height = int(height)
 cap.release()
-
+# ========================================================================================================================================== #
+                                                            # Specific Colours
 DIVIDER_COLOUR = (255, 255, 0)
 BOUNDING_BOX_COLOUR = (255, 0, 0)
 CENTROID_COLOUR = (0, 0, 255)
-
-# DIVIDER1 = (DIVIDER1_A, DIVIDER1_B) = ((length // 3, height), (length // 3, 290))
-# DIVIDER2 = (DIVIDER2_A, DIVIDER2_B) = ((length // 2, height), (length // 2, 290))
-# DIVIDER3 = (DIVIDER3_A, DIVIDER3_B) = ((length // 3 * 2, height), (length // 3 * 2, 290))
-
-
-
-# ========================================================================================================================================== #
+                                                            # Divider boundaries
 DIVIDER1 = (DIVIDER1_A, DIVIDER1_B) = ((length // 2 + 200 + 435, height//2 - 10 + 120), (length // 2 + 200 + 215, height//2 - 10 + 110))
-DIVIDER2 = (DIVIDER2_A, DIVIDER2_B) = ((length // 2 + 200 - 50, height//2 + 10 - 4), (length // 2, 330))
+DIVIDER2 = (DIVIDER2_A, DIVIDER2_B) = ((length // 2 + 200 - 50, height//2 + 10 - 4), (length // 2, 350))
 DIVIDER3 = (DIVIDER3_A, DIVIDER3_B) = ((length // 2 + 200 + 215, height//2 - 10 + 45),(length // 2 + 200 - 50, height//2 + 10 - 4))
 # ========================================================================================================================================== #
-# DIVIDER4 = (DIVIDER4_A, DIVIDER4_B) = ((length // 6, 250), (length // 6, 140))
-# DIVIDER5 = (DIVIDER5_A, DIVIDER5_B) = ((length // 3, 250), (length // 3, 140))
-# DIVIDER6 = (DIVIDER6_A, DIVIDER6_B) = ((length // 5 * 4, 250), (length // 5 * 4, 140))
 
 # def train_bg_subtractor(inst, cap, num=500):
 #     '''
@@ -92,7 +79,9 @@ def get_centroid(x, y, w, h):
 
     return (cx, cy)
 
-
+# ============================================================================ #
+                                # Filtering Function
+# ============================================================================ #
 def filter_mask(img):
     # Making the structuring element
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 6))
@@ -117,7 +106,7 @@ def filter_mask(img):
     _, mask = cv2.threshold(mask, 15, 255, cv2.THRESH_BINARY)
     
     return mask
-
+# ============================================================================ #
 def combined_nearby_centroid(contour_list):
     centroid_pool = [x[1] for x in contour_list]
     centroid_combined = []
@@ -135,7 +124,9 @@ def combined_nearby_centroid(contour_list):
                     if centroid in entry and centroid_pool[j] not in entry:
                         entry.append(centroid_pool[j])
     return centroid_combined
-
+# ============================================================================ #
+                            # Detecting Contours Function
+# ============================================================================ #
 def detect_vehicles(fg_mask, min_contour_width=35, min_contour_height=35):
     # finding external contours
     # contours, hierarchy = cv2.findContours(fg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_L1)
@@ -166,7 +157,9 @@ def detect_vehicles(fg_mask, min_contour_width=35, min_contour_height=35):
         centroid_aftercal.append((sum(tempx) // len(tempx), sum(tempy) // len(tempy)))
     return centroid_aftercal
 
-
+# ============================================================================ #
+                                # Processing Function
+# ============================================================================ #
 def process_frame(frame, bg_subtractor,car_counter):
 
     # Create a copy of source frame to draw into
@@ -176,22 +169,20 @@ def process_frame(frame, bg_subtractor,car_counter):
     cv2.line(processed, DIVIDER1_A, DIVIDER1_B, DIVIDER_COLOUR, 1)
     cv2.line(processed, DIVIDER2_A, DIVIDER2_B, DIVIDER_COLOUR, 1)
     cv2.line(processed, DIVIDER3_A, DIVIDER3_B, DIVIDER_COLOUR, 1)
-    # cv2.line(processed, DIVIDER4_A, DIVIDER4_B, DIVIDER_COLOUR, 1)
-    # cv2.line(processed, DIVIDER5_A, DIVIDER5_B, DIVIDER_COLOUR, 1)
-    # cv2.line(processed, DIVIDER6_A, DIVIDER6_B, DIVIDER_COLOUR, 1)
-    # cv2.circle(processed, (1020,230), 2, CENTROID_COLOUR, -1)
 
+    # Drawing circles at the endpoints of the dividers
     cv2.circle(processed, DIVIDER3_A, 5, (255,0,0),-1)
     cv2.circle(processed, DIVIDER3_B, 5, (0,255,0),-1)
     cv2.circle(processed, DIVIDER1_A, 5, (0,0,255),-1)
-    # cv2.circle(processed, DIVIDER2_B, 5, (150,15,155),-1)
-    # Remove the background
+    cv2.circle(processed, DIVIDER2_B, 5, (150,15,155),-1)
 
+    # Remove the background
     foreGround_mask = bg_subtractor.apply(frame, None, 0.01)
+    
+    # Filter the foreGround
     filtered_mask = filter_mask(foreGround_mask)
     # utils.save_frame(frame, "./out/fg_mask_%04d.png" % frame_number)
     detected_contours = detect_vehicles(filtered_mask)
-    # matches = detect_vehicles(fg_mask)
 
     for (i, contour) in enumerate(detected_contours):
         centroid = contour
@@ -211,6 +202,9 @@ def process_frame(frame, bg_subtractor,car_counter):
 
     return processed
 
+# ============================================================================ #
+                                # Main Function
+# ============================================================================ #
 def main():
 
     # creating MOG bg subtractor with 500 frames in cache
@@ -231,21 +225,9 @@ def main():
         # Reading one frame
         _, frame = cap.read()
         frame_number += 1
-        # utils.save_frame(frame, "./out/frame_%04d.png" % frame_number)
-        # foreGround_mask = bg_subtractor.apply(frame)
-        # filtered_mask = filter_mask(foreGround_mask)
-        # utils.save_frame(frame, "./out/fg_mask_%04d.png" % frame_number)
-        # detected_contours = detect_vehicles(filtered_mask)
-        # for contour in detected_contours:
-        #     x = contour[0][0]
-        #     y = contour[0][1]
-        #     w = contour[0][2]
-        #     h = contour[0][3]
-        #     cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
         if car_counter is None:
                 # We do this here, so that we can initialize with actual frame size
-                #car_counter = VehicleCounter(frame.shape[:2], frame.shape[1] / 2)
-                car_counter = VehicleCounter(frame.shape[:2], DIVIDER1, DIVIDER2, DIVIDER3)#, DIVIDER4, DIVIDER5, DIVIDER6)
+                car_counter = VehicleCounter(frame.shape[:2], DIVIDER1, DIVIDER2, DIVIDER3)
         processed = process_frame(frame,bg_subtractor,car_counter)
         try:
             cv2.imshow("Frame", frame)
@@ -259,7 +241,7 @@ def main():
 
     cap.release()
     cv2.destroyAllWindows()
-# ============================================================================
 
+# ============================================================================ #
 if __name__ == "__main__":
     main()

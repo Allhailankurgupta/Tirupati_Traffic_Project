@@ -68,7 +68,7 @@ class VehicleCounter(object):
         # self.vehicle_count4 = 0
         # self.vehicle_count5 = 0
         # self.vehicle_count6 = 0
-        self.max_unseen_frames = 3
+        self.max_unseen_frames = 6
 
     @staticmethod
     def get_vector(a, b):
