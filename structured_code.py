@@ -33,16 +33,16 @@ DIVIDER_COLOUR = (255, 255, 0)
 BOUNDING_BOX_COLOUR = (255, 0, 0)
 CENTROID_COLOUR = (0, 0, 255)
 
-DIVIDER1 = (DIVIDER1_A, DIVIDER1_B) = ((length // 3, height), (length // 3, 290))
-DIVIDER2 = (DIVIDER2_A, DIVIDER2_B) = ((length // 2, height), (length // 2, 290))
-DIVIDER3 = (DIVIDER3_A, DIVIDER3_B) = ((length // 3 * 2, height), (length // 3 * 2, 290))
+# DIVIDER1 = (DIVIDER1_A, DIVIDER1_B) = ((length // 3, height), (length // 3, 290))
+# DIVIDER2 = (DIVIDER2_A, DIVIDER2_B) = ((length // 2, height), (length // 2, 290))
+# DIVIDER3 = (DIVIDER3_A, DIVIDER3_B) = ((length // 3 * 2, height), (length // 3 * 2, 290))
 
 
 
 # ========================================================================================================================================== #
-# DIVIDER1 = (DIVIDER1_A, DIVIDER1_B) = ((length // 2 + 200 + 435, height//2 - 10 + 55), (length // 2 + 200 + 215, height//2 - 10 + 45))
-# DIVIDER2 = (DIVIDER2_A, DIVIDER2_B) = ((length // 2 + 200 - 50, height//2 + 10 - 4), (length // 2, 330))
-# DIVIDER3 = (DIVIDER3_A, DIVIDER3_B) = ((length // 2 + 200 + 215, height//2 - 10 + 45),(length // 2 + 200 - 50, height//2 + 10 - 4))
+DIVIDER1 = (DIVIDER1_A, DIVIDER1_B) = ((length // 2 + 200 + 435, height//2 - 10 + 120), (length // 2 + 200 + 215, height//2 - 10 + 110))
+DIVIDER2 = (DIVIDER2_A, DIVIDER2_B) = ((length // 2 + 200 - 50, height//2 + 10 - 4), (length // 2, 330))
+DIVIDER3 = (DIVIDER3_A, DIVIDER3_B) = ((length // 2 + 200 + 215, height//2 - 10 + 45),(length // 2 + 200 - 50, height//2 + 10 - 4))
 # ========================================================================================================================================== #
 # DIVIDER4 = (DIVIDER4_A, DIVIDER4_B) = ((length // 6, 250), (length // 6, 140))
 # DIVIDER5 = (DIVIDER5_A, DIVIDER5_B) = ((length // 3, 250), (length // 3, 140))
@@ -104,7 +104,7 @@ def filter_mask(img):
     # cv2.imshow('Opening',opening)
     # Dilate to merge adjacent blobs
     dilation = cv2.dilate(opening, kernel, iterations=9)
-    _, mask = cv2.threshold(dilation, 240, 255, cv2.THRESH_BINARY)
+    _, mask = cv2.threshold(dilation, 200, 255, cv2.THRESH_BINARY)
     cv2.imshow('Dilation and Thresholding',mask)
     # Applying Gaussian Blur
     mask = cv2.GaussianBlur(mask, (5, 5), cv2.BORDER_DEFAULT)
@@ -181,6 +181,10 @@ def process_frame(frame, bg_subtractor,car_counter):
     # cv2.line(processed, DIVIDER6_A, DIVIDER6_B, DIVIDER_COLOUR, 1)
     # cv2.circle(processed, (1020,230), 2, CENTROID_COLOUR, -1)
 
+    cv2.circle(processed, DIVIDER3_A, 5, (255,0,0),-1)
+    cv2.circle(processed, DIVIDER3_B, 5, (0,255,0),-1)
+    cv2.circle(processed, DIVIDER1_A, 5, (0,0,255),-1)
+    # cv2.circle(processed, DIVIDER2_B, 5, (150,15,155),-1)
     # Remove the background
 
     foreGround_mask = bg_subtractor.apply(frame, None, 0.01)
@@ -191,8 +195,8 @@ def process_frame(frame, bg_subtractor,car_counter):
 
     for (i, contour) in enumerate(detected_contours):
         centroid = contour
-        print(type(centroid))
-        print(centroid)
+        # print(type(centroid))
+        # print(centroid)
         # Mark the bounding box and the centroid on the processed frame
         # NB: Fixed the off-by one in the bottom right corner
         # cv2.rectangle(processed, (x, y), (x + w - 1, y + h - 1), BOUNDING_BOX_COLOUR, 1)
