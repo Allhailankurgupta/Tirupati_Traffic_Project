@@ -4,11 +4,6 @@ import os
 import random
 import numpy as np
 from Vehicle_counter import VehicleCounter
-# import skvideo.io
-# import matplotlib.pyplot as plt
-# import utils
-# without this some strange errors happen
-# cv2.ocl.setUseOpenCL(False)
 random.seed(123)
 
 # ============================================================================ #
@@ -35,29 +30,6 @@ DIVIDER2 = (DIVIDER2_A, DIVIDER2_B) = ((length // 2 + 200 - 50, height//2 + 10 -
 DIVIDER3 = (DIVIDER3_A, DIVIDER3_B) = ((length // 2 + 200 + 215, height//2 - 10 + 45),(length // 2 + 200 - 50, height//2 + 10 - 4))
 DIVIDER4 = (DIVIDER4_A, DIVIDER4_B) = ((length // 2 + 200 + 115, height//2 - 10 + 110), (length // 2 - 180, height//2 - 10 + 360))
 # ========================================================================================================================================== #
-
-# def train_bg_subtractor(inst, cap, num=500):
-#     '''
-#         BG substractor need process some amount of frames to start giving result
-#     '''
-#     print ('Training BG Subtractor...')
-#     i = 0
-#     clahe = cv2.createCLAHE(clipLimit=2.0,tileGridSize=(4,4))
-#     for frame in cap.read():
-#         if(type(frame)==bool):
-#             continue
-#         print(frame.shape)
-#         print('frame one',frame.shape)
-#         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-#         hsv_planes = cv2.split(hsv)
-#         cv2.imshow("v component",hsv_planes[2])
-#         hsv_planes[2] = cv2.threshold(hsv_planes[2],140,255,cv2.THRESH_TOZERO_INV)
-#         cv2.imshow("thresholded v component",cv2.UMat(imgUMat) )
-#         hsv_new = cv2.merge(hsv_planes)
-#         out = cv2.cvtColor(hsv_new, cv2.COLOR_HSV2BGR)
-#         inst.apply(out, None, 0.001)
-#         i += 1
-
 def train_bg_subtractor(inst, cap, num=500):
     '''
         BG substractor need process some amount of frames to start giving result
@@ -84,8 +56,6 @@ def get_centroid(x, y, w, h):
                                 # Filtering Function
 # ============================================================================ #
 def filter_mask(img):
-    laplacian = cv2.Laplacian(img,cv2.CV_64F)
-    cv2.imshow('lap',laplacian)
     # Making the structuring element
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 6))
     # Fill any small holes
@@ -111,8 +81,6 @@ def filter_mask(img):
     return mask
 # ============================================================================ #
 def combined_nearby_centroid(contour_list):
-    centroid_pool = [x[1] for x in contour_list]
-    centroid_combined = []
     my_centroid_pool = contour_list[:]
     my_centroid_combined = []
     i = 0
@@ -130,23 +98,6 @@ def combined_nearby_centroid(contour_list):
                     if centroid in entry and my_centroid_pool[j] not in entry:
                         entry.append(my_centroid_pool[j])
 
-    for (i, centroid) in enumerate(centroid_pool):
-        flag = 0
-        for entry in centroid_combined:
-            if centroid in entry:
-                flag = 1
-                break
-        if flag == 0:
-            centroid_combined.append([centroid])
-        for j in range(i, len(centroid_pool)):
-            if abs(centroid[0] - centroid_pool[j][0]) < 100 and abs(centroid[1] - centroid_pool[j][1]) < 40:    
-                for entry in centroid_combined:
-                    if centroid in entry and centroid_pool[j] not in entry:
-                        entry.append(centroid_pool[j])
-    # my_new_centroid_combined = [x[1] for x in my_centroid_combined]
-    # print("my: ",np.array(my_centroid_combined))
-    # print("new: ",np.array(centroid_combined))
-    # exit()
     return my_centroid_combined
 # ============================================================================ #
                             # Detecting Contours Function
@@ -161,17 +112,20 @@ def detect_vehicles(fg_mask, min_contour_width=35, min_contour_height=35):
     centroid_aftercal = []
     my_centroid_aftercal = []
     for (i, contour) in enumerate(contours):
+        # getting the bounding box dimensions
         (x, y, w, h) = cv2.boundingRect(contour)
+        # Finding area of the contour
         ar = cv2.contourArea(contour)
+        # to find if the contour is valid or not
         contour_valid = (hierarchy[0, i, 3] == -1) and (ar > 550) and ((w > h and (w/h < 3.5)) or (h/w < 3.5)) and (y>230)
 
         if not contour_valid:
             continue
-
+        # getting the centroid of the contour
         centroid = get_centroid(x, y, w, h)
-
+        # appending all the contours to a final list
         final_contour_list.append(((x, y, w, h), centroid))
-
+    # combines the nearby centroids
     centroid_combined = combined_nearby_centroid(final_contour_list)
 
     for entry in centroid_combined:
@@ -191,14 +145,6 @@ def detect_vehicles(fg_mask, min_contour_width=35, min_contour_height=35):
         x, y, w, h = sum(temp_cnt_x)//len(temp_cnt_x), sum(temp_cnt_y)//len(temp_cnt_y), sum(temp_cnt_w)//len(temp_cnt_w), sum(temp_cnt_h)//len(temp_cnt_h)
         cent_x, cent_y = sum(tempx) // len(tempx), sum(tempy) // len(tempy)
         my_centroid_aftercal.append(((x,y,w,h),(cent_x,cent_y)))
-
-    # for entry in centroid_combined:
-    #     tempx = []
-    #     tempy = []
-    #     for centroid in entry:
-    #         tempx.append(centroid[0])
-    #         tempy.append(centroid[1])
-    #     centroid_aftercal.append((sum(tempx) // len(tempx), sum(tempy) // len(tempy)))
     return my_centroid_aftercal,final_contour_list
 
 # ============================================================================ #
@@ -228,8 +174,9 @@ def process_frame(frame, bg_subtractor,car_counter):
     filtered_mask = filter_mask(foreGround_mask)
     # utils.save_frame(frame, "./out/fg_mask_%04d.png" % frame_number)
     detected_contours,boxes = detect_vehicles(filtered_mask)
-
+    # updating the count
     car_counter.update_count(detected_contours, processed)
+    # getting the list of vehicles
     v = car_counter.vehicles
     
     for veh in v:
@@ -239,19 +186,12 @@ def process_frame(frame, bg_subtractor,car_counter):
             , cv2.FONT_HERSHEY_PLAIN, 0.7, (55, 255, 55), 2)
 
     for (i, box) in enumerate(boxes):
-        centroid = box
-        # print(type(centroid))
-        # print(centroid)
-        # Mark the bounding box and the centroid on the processed frame
-        # NB: Fixed the off-by one in the bottom right corner
-        # cv2.rectangle(processed, (x, y), (x + w - 1, y + h - 1), BOUNDING_BOX_COLOUR, 1)
+        # Mark the bounding box on the processed frame
         x = box[0][0]
         y = box[0][1]
         w = box[0][2]
         h = box[0][3]
         cv2.rectangle(processed, (x, y), (x+w, y+h), (0, 255, 0), 2)
-        # cv2.circle(processed, centroid, 20, CENTROID_COLOUR, -1)
-
 
     return processed
 
@@ -260,14 +200,12 @@ def process_frame(frame, bg_subtractor,car_counter):
 # ============================================================================ #
 def main():
 
-    # creating MOG bg subtractor with 500 frames in cache
+    # creating MOG bg subtractor with 50 frames in cache
     # and shadow detction
-    
     bg_subtractor = cv2.createBackgroundSubtractorMOG2(
         history=50, detectShadows=True)
 
-    # Set up image source
-    # You can use also CV2, for some reason it not working for me
+    # Set up video source
     cap = cv2.VideoCapture(VIDEO_SOURCE)
     
     # skipping 500 frames to train bg subtractor
@@ -279,15 +217,13 @@ def main():
         _, frame = cap.read()
         frame_number += 1
         if car_counter is None:
-                # We do this here, so that we can initialize with actual frame size
-                car_counter = VehicleCounter(frame.shape[:2], DIVIDER1, DIVIDER2, DIVIDER3, DIVIDER4)
+            car_counter = VehicleCounter(frame.shape[:2], DIVIDER1, DIVIDER2, DIVIDER3, DIVIDER4)
         processed = process_frame(frame,bg_subtractor,car_counter)
         try:
             cv2.imshow("Frame", frame)
             cv2.imshow("processed", processed)
         except:
             pass
-
         key = cv2.waitKey(3)
         if key == 27:
             break
