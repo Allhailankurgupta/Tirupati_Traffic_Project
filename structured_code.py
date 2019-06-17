@@ -58,7 +58,7 @@ def get_centroid(x, y, w, h):
 # ============================================================================ #
 def filter_mask(img):
     # Making the structuring element
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 6))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (4, 4))
     # Fill any small holes
     closing = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
     # cv2.imshow('closing',closing)
@@ -66,7 +66,7 @@ def filter_mask(img):
     opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel)
     # cv2.imshow('Opening',opening)
     # Dilate to merge adjacent blobs
-    dilation = cv2.dilate(opening, kernel, iterations=3)
+    dilation = cv2.dilate(opening, kernel, iterations=4)
     _, mask = cv2.threshold(dilation, 200, 255, cv2.THRESH_BINARY)
     cv2.imshow('Dilation and Thresholding',mask)
     # Applying Gaussian Blur
