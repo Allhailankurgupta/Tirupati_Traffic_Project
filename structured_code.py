@@ -9,7 +9,9 @@ random.seed(123)
 # ============================================================================ #
                                 # Video Source
 IMAGE_DIR = "./out"
-VIDEO_SOURCE = "../../traffic_videos/NIGHT_TIME/vid1.avi"
+VIDEO_SOURCE = "../traffic_videos/192.168.1.171_Gandhi - East PS_main_20181121163002_183011.avi" # evening 04:30 to 06:30
+# VIDEO_SOURCE = "../traffic_videos/DAY_TIME/day.avi" # day time morning 09:30 to 11:30
+# VIDEO_SOURCE = "../traffic_videos/NIGHT_TIME/night.avi" # night time early morning 05:23 to 07:00
 SHAPE = (720, 1280)  # HxW
 # ========================================================================================================================================== #
                                             # Getting Dimensions and other properties of frame
@@ -29,6 +31,7 @@ DIVIDER1 = (DIVIDER1_A, DIVIDER1_B) = ((length // 2 + 200 + 435, height//2 - 10 
 DIVIDER2 = (DIVIDER2_A, DIVIDER2_B) = ((length // 2 + 200 - 50, height//2 + 10 - 4), (length // 2, 350))
 DIVIDER3 = (DIVIDER3_A, DIVIDER3_B) = ((length // 2 + 200 + 215, height//2 - 10 + 45),(length // 2 + 200 - 50, height//2 + 10 - 4))
 DIVIDER4 = (DIVIDER4_A, DIVIDER4_B) = ((length // 2 + 200 + 115, height//2 - 10 + 110), (length // 2 - 180, height//2 - 10 + 360))
+DIVIDER5 = (DIVIDER5_A, DIVIDER5_B) = ((length // 2 - 140 , height//2 - 40), (length // 2 - 40, height//2 - 50))
 # ========================================================================================================================================== #
 def train_bg_subtractor(inst, cap, num=500):
     '''
@@ -46,10 +49,8 @@ def train_bg_subtractor(inst, cap, num=500):
 def get_centroid(x, y, w, h):
     x1 = int(w / 2)
     y1 = int(h / 2)
-
     cx = x + x1
     cy = y + y1
-
     return (cx, cy)
 
 # ============================================================================ #
@@ -65,7 +66,7 @@ def filter_mask(img):
     opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel)
     # cv2.imshow('Opening',opening)
     # Dilate to merge adjacent blobs
-    dilation = cv2.dilate(opening, kernel, iterations=9)
+    dilation = cv2.dilate(opening, kernel, iterations=3)
     _, mask = cv2.threshold(dilation, 200, 255, cv2.THRESH_BINARY)
     cv2.imshow('Dilation and Thresholding',mask)
     # Applying Gaussian Blur
@@ -160,6 +161,7 @@ def process_frame(frame, bg_subtractor,car_counter):
     cv2.line(processed, DIVIDER2_A, DIVIDER2_B, DIVIDER_COLOUR, 1)
     cv2.line(processed, DIVIDER3_A, DIVIDER3_B, DIVIDER_COLOUR, 1)
     cv2.line(processed, DIVIDER4_A, DIVIDER4_B, DIVIDER_COLOUR, 1)
+    cv2.line(processed, DIVIDER5_A, DIVIDER5_B, DIVIDER_COLOUR, 1)
 
     # Drawing circles at the endpoints of the dividers
     cv2.circle(processed, DIVIDER3_A, 5, (255,0,0),-1)
@@ -214,10 +216,14 @@ def main():
     frame_number = -1
     while True:
         # Reading one frame
-        _, frame = cap.read()
+        ret, frame = cap.read()
+        if not ret:
+            print("skipped frame")
+            continue
         frame_number += 1
+        # print(frame.shape[:2])
         if car_counter is None:
-            car_counter = VehicleCounter(frame.shape[:2], DIVIDER1, DIVIDER2, DIVIDER3, DIVIDER4)
+            car_counter = VehicleCounter(frame.shape[:2], DIVIDER1, DIVIDER2, DIVIDER3, DIVIDER4, DIVIDER5)
         processed = process_frame(frame,bg_subtractor,car_counter)
         try:
             cv2.imshow("Frame", frame)
