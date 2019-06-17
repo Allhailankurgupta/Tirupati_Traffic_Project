@@ -13,7 +13,7 @@ class Vehicle(object):
         self.id = id
         self.positions = [position]
         self.frames_since_seen = 0
-        self.counted1 = False
+        # self.counted1 = False
         self.counted2 = False
         self.counted3 = False
         self.counted4 = False
@@ -40,7 +40,7 @@ def Divider_eqn(pt1,pt2,vehicle):
     slope = (pt2[1] - pt1[1])/(pt2[0] - pt1[0]) # calculating the slope
     c = pt2[1]-slope*pt2[0] # calculating the constant
     pos_last = vehicle.positions[-1][1] # latest position
-    pos_othr = vehicle.positions[-4][1] # some previous position
+    pos_othr = vehicle.positions[-2][1] # some previous position
     
 
     sign1 = pos_last[1]-slope*pos_last[0] - c # value when last point is substituted in line
@@ -58,10 +58,10 @@ def Divider_eqn(pt1,pt2,vehicle):
                             # Vehicle counting class
 # =============================================================================== #
 class VehicleCounter(object):
-    def __init__(self, shape, divider1, divider2, divider3, divider4, divider5):
+    def __init__(self, shape, divider2, divider3, divider4, divider5):
 
-        self.divider1a_x, self.divider1a_y = divider1[0][0], divider1[0][1]
-        self.divider1b_x, self.divider1b_y = divider1[1][0], divider1[1][1]
+        # self.divider1a_x, self.divider1a_y = divider1[0][0], divider1[0][1]
+        # self.divider1b_x, self.divider1b_y = divider1[1][0], divider1[1][1]
         self.divider2a_x, self.divider2a_y = divider2[0][0], divider2[0][1]
         self.divider2b_x, self.divider2b_y = divider2[1][0], divider2[1][1]
         self.divider3a_x, self.divider3a_y = divider3[0][0], divider3[0][1]
@@ -74,9 +74,8 @@ class VehicleCounter(object):
         
         self.vehicles = []
         self.next_vehicle_id = 0
-        self.vehicle_count1 = 0
-        self.vehicle_count1_up = 0
-        self.vehicle_count1_down = 0
+        # self.vehicle_count1_up = 0
+        # self.vehicle_count1_down = 0
         self.vehicle_count2_up = 0
         self.vehicle_count2_down = 0
         self.vehicle_count3_up = 0
@@ -155,8 +154,7 @@ class VehicleCounter(object):
         my_div4x = (self.divider4a_x + self.divider4b_x)/2
         my_div3y = (self.divider3a_y + self.divider3b_y)/2
         my_div2y = (self.divider2a_y + self.divider2b_y)/2
-        my_div1y = (self.divider1a_y + self.divider1b_y)/2
-        # print(self.divider5b_y < self.divider5a_y)
+        # my_div1y = (self.divider1a_y + self.divider1b_y)/2
         # Count any uncounted vehicles that are past the divider
         for vehicle in self.vehicles:
             # For divider 3 MIDDLE ONE
@@ -175,14 +173,14 @@ class VehicleCounter(object):
                 elif(vehicle.positions[-1][1][1] <= my_div2y <= vehicle.positions[-5][1][1]):
                     self.vehicle_count2_up += 1
                     vehicle.counted2 = True
-            # For divider 1 RIGHT ONE
-            if not vehicle.counted1 and len(vehicle.positions) > 6 and (self.divider1b_x < vehicle.positions[-1][1][0] < self.divider1a_x):
-                if((vehicle.positions[-1][1][1] >= my_div1y >= vehicle.positions[-5][1][1])):
-                    self.vehicle_count1_down += 1
-                    vehicle.counted1 = True
-                elif(vehicle.positions[-1][1][1] <= my_div1y <= vehicle.positions[-5][1][1]):
-                    self.vehicle_count1_up += 1
-                    vehicle.counted1 = True
+            # # For divider 1 RIGHT ONE
+            # if not vehicle.counted1 and len(vehicle.positions) > 6 and (self.divider1b_x < vehicle.positions[-1][1][0] < self.divider1a_x):
+            #     if((vehicle.positions[-1][1][1] >= my_div1y >= vehicle.positions[-5][1][1])):
+            #         self.vehicle_count1_down += 1
+            #         vehicle.counted1 = True
+            #     elif(vehicle.positions[-1][1][1] <= my_div1y <= vehicle.positions[-5][1][1]):
+            #         self.vehicle_count1_up += 1
+            #         vehicle.counted1 = True
             # For divider 4 ROUND ABOUT
             if not vehicle.counted4 and len(vehicle.positions) > 5 and (self.divider4a_y < vehicle.positions[-1][1][1] < self.divider4b_y):
                 res = Divider_eqn((self.divider4b_x, self.divider4b_y),(self.divider4a_x, self.divider4a_y),vehicle)
@@ -196,7 +194,7 @@ class VehicleCounter(object):
                         # print("down right here")
                         vehicle.counted4 = True
             # For divider 5 POLICE BUILDING
-            if not vehicle.counted5 and len(vehicle.positions) > 5 and (self.divider5b_y < vehicle.positions[-1][1][1] < self.divider5a_y):
+            if not vehicle.counted5 and len(vehicle.positions) > 2 and (self.divider5b_y < vehicle.positions[-1][1][1] < self.divider5a_y):
                 res = Divider_eqn((self.divider5b_x, self.divider5b_y),(self.divider5a_x, self.divider5a_y),vehicle)
                 if(res):
                     if(res>0):
@@ -227,12 +225,13 @@ class VehicleCounter(object):
                 , cv2.FONT_HERSHEY_PLAIN, 1.7, (127, 255, 255), 2)
             cv2.putText(output_image, ("midUp:%02d" % self.vehicle_count3_up), (800, 230)
                 , cv2.FONT_HERSHEY_PLAIN, 1.7, (127, 255, 255), 2)
-            # For divider 1 RIGHT ONE
-            cv2.rectangle(overlay, (1070, 80), (1270, 160),(255, 0, 255), -1)  
-            cv2.putText(output_image, ("rightDown:%02d" % self.vehicle_count1_down), (1080, 100)
-            , cv2.FONT_HERSHEY_PLAIN, 1.7, (55, 55, 255), 2)
-            cv2.putText(output_image, ("rightUp:%02d" % self.vehicle_count1_up), (1080, 150)
-                , cv2.FONT_HERSHEY_PLAIN, 1.7, (55, 55, 255), 2)
+            # # For divider 1 RIGHT ONE
+            # cv2.rectangle(overlay, (1070, 80), (1270, 160),(255, 0, 255), -1)  
+            # cv2.putText(output_image, ("rightDown:%02d" % self.vehicle_count1_down), (1080, 100)
+            # , cv2.FONT_HERSHEY_PLAIN, 1.7, (55, 55, 255), 2)
+            # cv2.putText(output_image, ("rightUp:%02d" % self.vehicle_count1_up), (1080, 150)
+            #     , cv2.FONT_HERSHEY_PLAIN, 1.7, (55, 55, 255), 2)
+
             # For divider 4 ROUND ABOUT
             cv2.rectangle(overlay, (190, 60), (410, 140),(0, 105, 0), -1)   
             cv2.putText(output_image, ("round left:%02d" % self.vehicle_count4_left), (200, 90)
@@ -241,10 +240,11 @@ class VehicleCounter(object):
                 , cv2.FONT_HERSHEY_PLAIN, 1.7, (255, 5, 100), 2)
             # For divider 5 POLICE BUILDING
             cv2.rectangle(overlay, (100, 160), (330, 240),(255, 255, 255), -1)   
-            cv2.putText(output_image, ("building in:%02d" % self.vehicle_count5_in), (108, 190)
+            cv2.putText(output_image, ("east-PS in:%02d" % self.vehicle_count5_in), (108, 190)
                 , cv2.FONT_HERSHEY_PLAIN, 1.7, (255, 155, 55), 2)
-            cv2.putText(output_image, ("building out:%02d" % self.vehicle_count5_out), (108, 230)
+            cv2.putText(output_image, ("east-PS out:%02d" % self.vehicle_count5_out), (108, 230)
                 , cv2.FONT_HERSHEY_PLAIN, 1.7, (255, 155, 55), 2)
+            
             cv2.addWeighted(overlay, alpha, output_image, 1 - alpha,0, output_image)     
 
         # Remove vehicles that have not been seen long enough

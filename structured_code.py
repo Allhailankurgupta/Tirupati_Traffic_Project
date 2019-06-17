@@ -27,10 +27,10 @@ DIVIDER_COLOUR = (255, 255, 0)
 BOUNDING_BOX_COLOUR = (255, 0, 0)
 CENTROID_COLOUR = (0, 0, 255)
                                                             # Divider boundaries
-DIVIDER1 = (DIVIDER1_A, DIVIDER1_B) = ((length // 2 + 200 + 435, height//2 - 10 + 120), (length // 2 + 200 + 215, height//2 - 10 + 110))
+# DIVIDER1 = (DIVIDER1_A, DIVIDER1_B) = ((length // 2 + 200 + 435, height//2 - 10 + 120), (length // 2 + 200 + 215, height//2 - 10 + 110))
 DIVIDER2 = (DIVIDER2_A, DIVIDER2_B) = ((length // 2 + 200 - 50, height//2 + 10 - 4), (length // 2, 350))
-DIVIDER3 = (DIVIDER3_A, DIVIDER3_B) = ((length // 2 + 200 + 215, height//2 - 10 + 45),(length // 2 + 200 - 50, height//2 + 10 - 4))
-DIVIDER4 = (DIVIDER4_A, DIVIDER4_B) = ((length // 2 + 200 + 115, height//2 - 10 + 110), (length // 2 - 180, height//2 - 10 + 360))
+DIVIDER3 = (DIVIDER3_A, DIVIDER3_B) = ((length // 2 + 630, height//2 + 45),(length // 2 + 200 - 50, height//2 + 10 - 4))
+DIVIDER4 = (DIVIDER4_A, DIVIDER4_B) = ((length // 2 + 200 + 150, height//2 - 10 + 110), (length // 2 - 180, height//2 - 10 + 360))
 DIVIDER5 = (DIVIDER5_A, DIVIDER5_B) = ((length // 2 - 140 , height//2 - 40), (length // 2 - 40, height//2 - 50))
 # ========================================================================================================================================== #
 def train_bg_subtractor(inst, cap, num=500):
@@ -68,14 +68,14 @@ def filter_mask(img):
     # Dilate to merge adjacent blobs
     dilation = cv2.dilate(opening, kernel, iterations=4)
     _, mask = cv2.threshold(dilation, 200, 255, cv2.THRESH_BINARY)
-    cv2.imshow('Dilation and Thresholding',mask)
+    # cv2.imshow('Dilation and Thresholding',mask)
     # Applying Gaussian Blur
     mask = cv2.GaussianBlur(mask, (5, 5), cv2.BORDER_DEFAULT)
-    cv2.imshow('Gauss Mask',mask)
+    # cv2.imshow('Gauss Mask',mask)
     _, mask = cv2.threshold(mask, 35, 255, cv2.THRESH_BINARY)
     # Applying Median Blur
     mask = cv2.medianBlur(mask, 5)
-    cv2.imshow('Median mask',mask)
+    # cv2.imshow('Median mask',mask)
     # Final Mask
     _, mask = cv2.threshold(mask, 15, 255, cv2.THRESH_BINARY)
     
@@ -157,7 +157,7 @@ def process_frame(frame, bg_subtractor,car_counter):
     processed = frame.copy()
 
     # Draw dividing line -- we count cars as they cross this line.
-    cv2.line(processed, DIVIDER1_A, DIVIDER1_B, DIVIDER_COLOUR, 1)
+    # cv2.line(processed, DIVIDER1_A, DIVIDER1_B, DIVIDER_COLOUR, 1)
     cv2.line(processed, DIVIDER2_A, DIVIDER2_B, DIVIDER_COLOUR, 1)
     cv2.line(processed, DIVIDER3_A, DIVIDER3_B, DIVIDER_COLOUR, 1)
     cv2.line(processed, DIVIDER4_A, DIVIDER4_B, DIVIDER_COLOUR, 1)
@@ -166,7 +166,7 @@ def process_frame(frame, bg_subtractor,car_counter):
     # Drawing circles at the endpoints of the dividers
     cv2.circle(processed, DIVIDER3_A, 5, (255,0,0),-1)
     cv2.circle(processed, DIVIDER3_B, 5, (0,255,0),-1)
-    cv2.circle(processed, DIVIDER1_A, 5, (0,0,255),-1)
+    # cv2.circle(processed, DIVIDER1_A, 5, (0,0,255),-1)
     cv2.circle(processed, DIVIDER2_B, 5, (150,15,155),-1)
 
     # Remove the background
@@ -223,8 +223,11 @@ def main():
         frame_number += 1
         # print(frame.shape[:2])
         if car_counter is None:
-            car_counter = VehicleCounter(frame.shape[:2], DIVIDER1, DIVIDER2, DIVIDER3, DIVIDER4, DIVIDER5)
+            car_counter = VehicleCounter(frame.shape[:2], DIVIDER2, DIVIDER3, DIVIDER4, DIVIDER5)
         processed = process_frame(frame,bg_subtractor,car_counter)
+        print(frame_number)
+        if(frame_number<10000):
+            continue
         try:
             cv2.imshow("Frame", frame)
             cv2.imshow("processed", processed)
