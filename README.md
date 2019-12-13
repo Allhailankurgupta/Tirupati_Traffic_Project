@@ -1,6 +1,6 @@
-# Project Report
+# Efficient Traffic MOnitoring and Analysis Prototype
 
-# Problem Statement
+## Problem Statement
 
 To monitor the traffic density considering the varying and different climatic conditions
 
