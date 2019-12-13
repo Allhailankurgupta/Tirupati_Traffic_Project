@@ -1,4 +1,4 @@
-# Efficient Traffic MOnitoring and Analysis Prototype
+# Efficient Traffic Monitoring and Analysis Prototype
 
 ## Problem Statement
 
