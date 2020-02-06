@@ -19,4 +19,3 @@ For complete process see [Final_Project_Report](https://github.com/Allhailankurg
 
 ![ALT](./assets/AnnaTirupati.gif)
 
-[for full video go to this link](https://youtu.be/DDffY3LbCY8)
