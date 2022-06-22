@@ -1,6 +1,6 @@
 freeze==1.0.10
 imutils==0.5.2
-numpy==1.16.4
+numpy==1.22.0
 opencv-contrib-python==4.1.0.25
 opencv-python==4.1.0.25
 six==1.12.0
